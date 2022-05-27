@@ -1,0 +1,4 @@
+samples_rna: "metadata/rna.csv"
+samples_atac: "metadata/atac.csv"
+singularityR: "docker://marcjwilliams1/signals"
+thousand_genomes_snps: /juno/work/shah/reference/singlecellpipeline/human/thousand_genomes_snps.tsv
