@@ -72,28 +72,18 @@ newdf <- haps[newdf, on = c("CHROM", "POS")] %>%
   .[, allele0 := fifelse(ref_phase == 0, DP - AD, AD)] %>% 
   .[, allele1 := fifelse(ref_phase == 0, AD, DP - AD)] %>% 
   dplyr::select(-ref_phase, -alt_phase, -AD, -snpid, -cellid) %>%
-  dplyr::rename(cell_id = barcode, position_hg19 = POS, ref = REF, alt = ALT, chr = CHROM) %>%
-  dplyr::select(cell_id, chr, position_hg19, position_hg38, ref, alt, hap_label, allele0, allele1) %>%
+  dplyr::rename(cell_id = barcode, position = POS, ref = REF, alt = ALT, chr = CHROM) %>%
+  dplyr::select(cell_id, chr, position, position_hg38, ref, alt, hap_label, allele0, allele1) %>%
   .[, totalcounts := allele0 + allele1] %>% 
   .[order(cell_id, chr, position)] %>%
-  mutate(patient = snakemake@wildcards$sample, sample = snakemake@wildcards$sample_id)
+  mutate(patient = snakemake@wildcards$patient, sample = snakemake@wildcards$sample_id)
 
 fwrite(x = newdf, file = snakemake@output$alldata)
 
-newdf_phased <- format_haplotypes_rna(newdf %>% mutate(patient = snakemake@wildcards$sample, sample = snakemake@wildcards$sample_id) %>% as.data.frame(), phased_haplotypes = fread(snakemake@input$phasedhaplotypes))
-fwrite(x = newdf_phased$block_counts, file = snakemake@output$alldata_phased_dna)
+newdf <- newdf %>% 
+        mutate(patient = snakemake@wildcards$patient, sample = snakemake@wildcards$sample_id) %>% 
+        as.data.frame()
+ph_haplotypes <- fread(snakemake@input$phasedhaplotypes)
 
-# binsize <- as.numeric(snakemake@config$hmmcopy$bin_size)
-# 
-# summed_data <- newdf %>% 
-#   .[, binid := floor(position / binsize) * binsize + 1] %>%
-#   .[, list(allele0 = sum(allele0),
-#            allele1 = sum(allele1),
-#            start = min(position),
-#            end = max(position)), by = c("cell_id", "chr", "hap_label", "binid")] %>% 
-#   .[, start := floor(start / binsize) * binsize + 1] %>%
-#   .[, end := start + binsize - 1] %>%
-#   .[, binid := NULL] %>% 
-#   .[, totalcounts := allele0 + allele1] %>% 
-#   .[order(cell_id, chr, hap_label)]
-# fwrite(summed_data, file = snakemake@output$perblock)
+newdf_phased <- format_haplotypes_rna(newdf, phased_haplotypes = ph_haplotypes)
+fwrite(x = newdf_phased$block_counts, file = snakemake@output$alldata_phased_dna)
