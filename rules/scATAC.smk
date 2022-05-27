@@ -58,16 +58,34 @@ rule format_per_cell_counts_atac:
     script: "../scripts/format_vcf_haps.R"
 
 def _get_allele_count_files_atac(wildcards):
-    return scatac_md[scatac_md["isabl_patient_id"] == wildcards.patient]["filename"].to_list()
+    x = scatac_md[scatac_md["isabl_patient_id"] == wildcards.patient]["filename"] + "allele_counts.csv.gz"
+    x = x.to_list()
+    return x
+
+def _get_phased_allele_count_files_atac(wildcards):
+    x = scatac_md[scatac_md["isabl_patient_id"] == wildcards.patient]["filename"] + "allele_counts_phased.csv.gz"
+    x = x.to_list()
+    return x
 
 rule combinefilesatac:
-    input: _get_allele_count_files_atac
-    output: "results/scatac/counthaps/{patient}/{patient}_allele_counts.csv.gz"
+    input: 
+        counts = _get_allele_count_files_atac,
+        countsphased = _get_phased_allele_count_files_atac
+    output: 
+        "results/scatac/counthaps/{patient}/{patient}_allele_counts.csv.gz",
+        "results/scatac/counthaps/{patient}/{patient}_allele_counts_phased.csv.gz"
     resources: mem_mb=1024*50
     run:
         dist_list = []
-        for f in input:
+        for f in input.counts:
             dist_temp = pd.read_csv(f)
             dist_list.append(dist_temp)
         dist = pd.concat(dist_list, ignore_index=True)
         dist.to_csv(output[0], sep=',')
+
+        dist_list = []
+        for f in input.countsphased:
+            dist_temp = pd.read_csv(f)
+            dist_list.append(dist_temp)
+        dist = pd.concat(dist_list, ignore_index=True)
+        dist.to_csv(output[1], sep=',')

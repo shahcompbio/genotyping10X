@@ -15,20 +15,20 @@ scrna = shahlabdata.isabl.get_results("CELLRANGER", most_recent=True)
 scrna = scrna[scrna["isabl_patient_id"].isin(samples_rna["sample"])]
 scrna = scrna[scrna["isabl_aliquot_id"] != "Unspecified Aliquot"]
 scrna_md = scrna[["isabl_patient_id", "isabl_sample_id", "isabl_aliquot_id"]].drop_duplicates()
-scrna_md["filename"] = "results/scrna/counthaps/" + scrna_md["isabl_patient_id"] + "/" + scrna_md["isabl_sample_id"] + "/allele_counts.csv.gz"
+scrna_md["filename"] = "results/scrna/counthaps/" + scrna_md["isabl_patient_id"] + "/" + scrna_md["isabl_sample_id"] + "/"
 
 
 scatac = shahlabdata.isabl.get_results("CELLRANGER_ATAC", most_recent=True)
 scatac = scatac[scatac["isabl_patient_id"].isin(samples_atac["sample"])]
 scatac = scatac[scatac["isabl_aliquot_id"] != "Unspecified Aliquot"]
 scatac_md = scatac[["isabl_patient_id", "isabl_sample_id", "isabl_aliquot_id"]].drop_duplicates()
-scatac_md["filename"] = "results/scatac/counthaps/" + scatac_md["isabl_patient_id"] + "/" + scatac_md["isabl_sample_id"] + "/allele_counts.csv.gz"
+scatac_md["filename"] = "results/scatac/counthaps/" + scatac_md["isabl_patient_id"] + "/" + scatac_md["isabl_sample_id"] + "/"
 print(scatac_md.head())
 
 rule all:
     input:
-        expand("results/scrna/counthaps/{patient}/{patient}_allele_counts.csv.gz", patient = samples_rna["sample"]),
-        expand("results/scatac/counthaps/{patient}/{patient}_allele_counts.csv.gz", patient = samples_atac["sample"])
+        expand("results/scrna/counthaps/{patient}/{patient}_allele_counts_phased.csv.gz", patient = samples_rna["sample"]),
+        expand("results/scatac/counthaps/{patient}/{patient}_allele_counts_phased.csv.gz", patient = samples_atac["sample"])
 
 include: "rules/haps_to_vcf.smk"
 include: "rules/scRNA.smk"
